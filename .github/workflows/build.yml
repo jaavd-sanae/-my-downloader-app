@@ -1,0 +1,45 @@
+name: Build Android APK
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.9'
+    
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y python3-pip git zip unzip openjdk-17-jdk
+        pip install --upgrade Cython buildozer
+    
+    - name: Build APK
+      run: |
+        buildozer init
+        echo "
+        [app]
+        title = دانلودر اینستاگرام و یوتوب
+        package.name = mydownloader
+        package.domain = ir.myapp
+        version = 1.0
+        source.dir = .
+        source.main = main.py
+        android.permissions = INTERNET, WRITE_EXTERNAL_STORAGE
+        requirements = python3, flet
+        android.api = 33
+        android.minapi = 21
+        " > buildozer.spec
+        buildozer -v android debug
+        
+    - name: Upload APK
+      uses: actions/upload-artifact@v2
+      with:
+        name: app-apk
+        path: bin/*.apk
